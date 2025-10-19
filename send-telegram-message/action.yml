@@ -17,4 +17,7 @@ runs:
   steps:
     - name: Send Telegram message
       shell: bash
+      run: ls
+    - name: Send Telegram message
+      shell: bash
       run: ./send-message.sh "${{ inputs.bot-token }}" "${{ inputs.chat-id }}" "${{ inputs.message }}"
