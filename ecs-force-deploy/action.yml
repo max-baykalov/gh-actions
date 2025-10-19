@@ -1,0 +1,67 @@
+name: "ECS Force Deploy"
+description: "Force a new ECS service deployment and wait for it to stabilize."
+
+inputs:
+  cluster:
+    description: "ECS cluster name."
+    required: true
+  service:
+    description: "ECS service name."
+    required: true
+  region:
+    description: "AWS region."
+    required: true
+  wait-timeout:
+    description: "Maximum wait time in seconds (default: 600 = 10 minutes)."
+    required: false
+    default: "600"
+
+outputs:
+  deployment-status:
+    description: "Final status of ECS service (stabilized or timeout)."
+    value: ${{ steps.wait.outputs.deployment-status }}
+
+runs:
+  using: "composite"
+  steps:
+    - name: Force new ECS deployment
+      id: force
+      shell: bash
+      run: |
+        set -e
+        echo "🚀 Forcing new ECS deployment..."
+        echo "📦 Cluster: ${{ inputs.cluster }}"
+        echo "🔧 Service: ${{ inputs.service }}"
+        echo "🌍 Region:  ${{ inputs.region }}"
+
+        aws ecs update-service \
+          --cluster "${{ inputs.cluster }}" \
+          --service "${{ inputs.service }}" \
+          --force-new-deployment \
+          --region "${{ inputs.region }}" >/dev/null
+
+        echo "✅ ECS deployment triggered successfully."
+
+    - name: Wait for ECS service stability
+      id: wait
+      shell: bash
+      run: |
+        set -e
+        TIMEOUT=${{ inputs.wait-timeout }}
+        CLUSTER=${{ inputs.cluster }}
+        SERVICE=${{ inputs.service }}
+        REGION=${{ inputs.region }}
+
+        echo "⏳ Waiting up to ${TIMEOUT}s for ECS service to stabilize..."
+
+        if timeout "$TIMEOUT" aws ecs wait services-stable \
+          --cluster "$CLUSTER" \
+          --services "$SERVICE" \
+          --region "$REGION"; then
+          echo "✅ ECS service stabilized successfully."
+          echo "deployment-status=stabilized" >> $GITHUB_OUTPUT
+        else
+          echo "::error::❌ ECS service failed to stabilize within ${TIMEOUT}s."
+          echo "deployment-status=timeout" >> $GITHUB_OUTPUT
+          exit 1
+        fi
