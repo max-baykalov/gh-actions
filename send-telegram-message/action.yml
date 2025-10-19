@@ -17,9 +17,6 @@ runs:
   steps:
     - name: Send Telegram message
       shell: bash
-      run: ls
-    - name: Send Telegram message
-      shell: bash
       run: |
         set -e
 
