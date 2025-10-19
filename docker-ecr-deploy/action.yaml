@@ -1,0 +1,38 @@
+name: "Docker Build & Push to Amazon ECR"
+description: "Builds a Docker image and pushes it to Amazon ECR"
+inputs:
+  ecr-registry:
+    description: "ECR registry URL (from aws-actions/amazon-ecr-login)"
+    required: true
+  service-name:
+    description: "Service name / image name"
+    required: true
+  dockerfile:
+    description: "Dockerfile path"
+    required: false
+    default: ".Dockerfile"
+  working-directory:
+    description: "Directory to run docker build in"
+    required: false
+    default: "."
+  image-tag:
+    description: "Image tag to use"
+    required: false
+    default: "${{ github.sha }}"
+
+runs:
+  using: "composite"
+  steps:
+    - name: Build and push Docker image
+      shell: bash
+      working-directory: ${{ inputs.working-directory }}
+      run: |
+        echo "Building Docker image..."
+        docker build \
+          -f ${{ inputs.dockerfile }} \
+          -t ${{ inputs.ecr-registry }}/${{ inputs.service-name }}:${{ inputs.image-tag }} \
+          -t ${{ inputs.ecr-registry }}/${{ inputs.service-name }}:latest \
+          .
+        echo "Pushing Docker image..."
+        docker push ${{ inputs.ecr-registry }}/${{ inputs.service-name }}:${{ inputs.image-tag }}
+        docker push ${{ inputs.ecr-registry }}/${{ inputs.service-name }}:latest
