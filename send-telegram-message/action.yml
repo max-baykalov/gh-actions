@@ -1,5 +1,5 @@
 name: "Send Telegram Message"
-description: "Sends a message to a Telegram chat with error handling"
+description: "Sends a message to a Telegram chat"
 
 inputs:
   bot-token:
@@ -20,11 +20,10 @@ runs:
       run: |
         set -e
 
-        BOT_TOKEN="${{ secrets.NOTIFICATIONS_BOT_TOKEN }}"
-        CHAT_ID="${{ secrets.TELEGRAM_CHAT_ID_MAX }}"
-        MESSAGE="${{ github.actor }} test"
+        BOT_TOKEN="${{ inputs.bot-token }}"
+        CHAT_ID="${{ inputs.chat-id }}"
+        MESSAGE="${{ inputs.message }}"
 
-        # Send Telegram message
         RESPONSE=$(curl -s -X POST "https://api.telegram.org/bot${BOT_TOKEN}/sendMessage" \
           -H "Content-Type: application/json" \
           -d "{
@@ -32,7 +31,6 @@ runs:
             \"text\": \"${MESSAGE}\"
           }")
 
-        # Check for errors
         OK=$(echo "$RESPONSE" | jq -r '.ok')
         if [ "$OK" != "true" ]; then
           echo "::error::Telegram API call failed: $RESPONSE"
@@ -40,4 +38,3 @@ runs:
         fi
 
         echo "✅ Telegram message sent"
-
