@@ -1,5 +1,5 @@
-name: Send Telegram Message
-description: Sends a message to a Telegram chat via bot token
+name: "Send Telegram Message"
+description: "Sends a message to a Telegram chat with error handling"
 
 inputs:
   bot-token:
@@ -15,16 +15,6 @@ inputs:
 runs:
   using: "composite"
   steps:
-    - name: Send message to Telegram
+    - name: Send Telegram message
       shell: bash
-      run: |
-        curl -s -X POST "https://api.telegram.org/bot${{ inputs.bot-token }}/sendMessage" \
-          -H "Content-Type: application/json" \
-          -d "{
-            \"chat_id\": \"${{ inputs.chat-id }}\",
-            \"text\": \"${{ inputs.message }}\"
-          }"
-    - name: "log"
-      shell: bash
-      run: |
-        echo "log"
+      run: ./send-message.sh "${{ inputs.bot-token }}" "${{ inputs.chat-id }}" "${{ inputs.message }}"
