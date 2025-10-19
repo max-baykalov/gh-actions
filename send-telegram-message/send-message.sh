@@ -20,5 +20,4 @@ if [ "$OK" != "true" ]; then
   exit 1
 fi
 
-# Extract message ID
 echo "✅ Telegram message sent"
